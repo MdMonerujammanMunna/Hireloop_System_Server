@@ -1,3 +1,5 @@
+const dns = require("node:dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const express = require('express')
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const dotenv = require("dotenv").config()
@@ -32,7 +34,9 @@ async function run() {
 
         const database = client.db("Hireloop_System");
         const JobCollection = database.collection("Jobs");
+        const CompanyCollection = database.collection("Companies");
 
+        // Jobs Posted by the Recruiter's Company
         app.post("/api/jobs", async (req, res) => {
             try {
                 const job = req.body
@@ -43,19 +47,50 @@ async function run() {
                 res.status(500).send({ error: err.message })
             }
         })
+
+        //Jobs retrieved successfully for the recruiter's company.
         app.get("/api/jobs", async (req, res) => {
             const query = {}
             if (req.query.companyId) {
                 query.companyId = req.query.companyId
             }
-            if (req.query.status) {
-                query.status = req.query.status
-            }
+            // Apply additional status-based filtering :-
+
+            // if (req.query.status) {
+            //     query.status = req.query.status
+            // }
 
             const cursor = JobCollection.find(query)
             const result = await cursor.toArray()
             res.send(result)
         })
+
+        // Company Registration by the Recruiter
+        app.post("/api/register/company", async (req, res) => {
+
+            try {
+                const company = req.body
+                const result = await CompanyCollection.insertOne(company);
+                res.send(result)
+            } catch (err) {
+                console.error("Failed to insert company:", err)
+                res.status(500).send({ error: err.message })
+            }
+        })
+
+        // Company Registration Successfully Retrieved by the Recruiter
+        app.get("/api/register/company/get", async (req, res) => {
+            const query = {}
+            // console.log(req.query)
+            if (req.query.UserID) {
+                query.UserID = req.query.UserID
+            }
+            const cursor = CompanyCollection.find(query)
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     }
