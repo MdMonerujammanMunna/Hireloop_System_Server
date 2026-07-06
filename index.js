@@ -1,7 +1,7 @@
 const dns = require("node:dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const dotenv = require("dotenv").config()
 const cors = require("cors")
 const app = express()
@@ -87,6 +87,16 @@ async function run() {
             }
             const cursor = CompanyCollection.find(query)
             const result = await cursor.toArray()
+            res.send(result)
+        })
+        // Delete Jobs From MongoDb
+        app.delete("/api/jobs/delete/HowCreatethis", async (req, res) => {
+
+            const { jobsId } = req.body;
+
+            const result = await JobCollection.deleteOne({
+                _id: new ObjectId(jobsId),
+            });
             res.send(result)
         })
 
